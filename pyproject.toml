@@ -3,6 +3,9 @@ name = "chess_bench"
 version = "0.1.0"
 description = "A Python project"
 requires-python = ">=3.11"
+dependencies = [
+    "chess>=1.10",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -12,6 +15,12 @@ dev = [
     "ipython>=8.0",
 ]
 
+[project.scripts]
+chess-bench = "chess_bench.cli:main"
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
