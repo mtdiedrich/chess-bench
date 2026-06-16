@@ -25,10 +25,18 @@ def _update_ratings(rating_a, rating_b, score_a, k=_stub_elo.DEFAULT_K):
 
 
 _stub_elo.update_ratings = _update_ratings
+_saved_elo = sys.modules.get("chess_bench.elo")
 sys.modules["chess_bench.elo"] = _stub_elo
 
 from chess_bench import registry  # noqa: E402
 from chess_bench.registry import PlayerRecord, Registry  # noqa: E402
+
+# registry.py bound the stub above at its top-level import; restore the real
+# module so the stub doesn't leak into other test modules during the combined run.
+if _saved_elo is None:
+    sys.modules.pop("chess_bench.elo", None)
+else:
+    sys.modules["chess_bench.elo"] = _saved_elo
 
 
 @pytest.fixture

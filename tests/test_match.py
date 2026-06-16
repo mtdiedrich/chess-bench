@@ -67,12 +67,20 @@ class ChessGame:
 
 
 # Inject a fake chess_bench.game module so match.py can import it.
+_saved_game_mod = sys.modules.get("chess_bench.game")
 _game_mod = types.ModuleType("chess_bench.game")
 _game_mod.ChessGame = ChessGame
 _game_mod.IllegalMoveError = IllegalMoveError
 sys.modules["chess_bench.game"] = _game_mod
 
 from chess_bench.match import MatchResult, play_and_record, play_match  # noqa: E402
+
+# match.py bound the stub above at its top-level import; restore the real module
+# so the stub doesn't leak into other test modules during the combined run.
+if _saved_game_mod is None:
+    sys.modules.pop("chess_bench.game", None)
+else:
+    sys.modules["chess_bench.game"] = _saved_game_mod
 
 
 # --- Test doubles -----------------------------------------------------------

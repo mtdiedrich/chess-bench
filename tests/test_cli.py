@@ -115,9 +115,28 @@ def _install_stubs() -> None:
     sys.modules["chess_bench.tournament"] = tournament_mod
 
 
+_STUBBED_MODULES = (
+    "chess_bench.match",
+    "chess_bench.players",
+    "chess_bench.players.base",
+    "chess_bench.registry",
+    "chess_bench.tournament",
+)
+_saved_modules = {name: sys.modules.get(name) for name in _STUBBED_MODULES}
+
 _install_stubs()
 
 from chess_bench import cli  # noqa: E402
+
+# ``cli`` bound the stub references at its top-level import above, so its own
+# tests keep using the stubs regardless of sys.modules afterwards. Restore the
+# real modules now so these stubs don't leak into other test modules during the
+# combined test run (e.g. shadowing the real ``chess_bench.players`` package).
+for _name, _mod in _saved_modules.items():
+    if _mod is None:
+        sys.modules.pop(_name, None)
+    else:
+        sys.modules[_name] = _mod
 
 
 @pytest.fixture(autouse=True)

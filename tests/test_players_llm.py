@@ -63,10 +63,24 @@ def _install_prompts_stub() -> None:
     sys.modules["chess_bench.prompts"] = prompts_mod
 
 
+_STUBBED_MODULES = ("chess_bench.players.base", "chess_bench.prompts")
+_saved_modules = {name: sys.modules.get(name) for name in _STUBBED_MODULES}
+
 _install_base_stub()
 _install_prompts_stub()
 
 from chess_bench.players import llm  # noqa: E402
+
+# Restore the real sibling modules so these stubs don't leak into other test
+# modules during the combined run (notably shadowing the real ``chess_bench.prompts``
+# that ``test_prompts`` binds at collection time). ``llm`` imports ``prompts``
+# lazily and the real ``parse_move`` is a superset of the stub, so the LLMPlayer
+# tests below still behave correctly against the real module.
+for _name, _mod in _saved_modules.items():
+    if _mod is None:
+        sys.modules.pop(_name, None)
+    else:
+        sys.modules[_name] = _mod
 from chess_bench.players.llm import (  # noqa: E402
     AnthropicClient,
     GoogleClient,
